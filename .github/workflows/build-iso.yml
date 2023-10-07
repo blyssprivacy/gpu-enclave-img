@@ -9,7 +9,7 @@ jobs:
       - name: Update
         run: sudo apt-get update
       - name: Install deps
-        run: sudo apt-get install -y qemu-system-x86 libvirt-clients libvirt-daemon-system bridge-utils virtinst libvirt-daemon
+        run: sudo apt-get install -y qemu-system-x86 libvirt-clients libvirt-daemon-system bridge-utils virtinst libvirt-daemon cloud-image-utils
       - name: Run cloud-localds
         run: |
           cloud-localds seed.iso kernel/iso/user-data kernel/iso/meta-data
