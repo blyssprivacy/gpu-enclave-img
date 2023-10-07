@@ -23,6 +23,7 @@ jobs:
         run: |
           truncate -s 10G image.img
       - name: Perform the install
+        shell: 'script -q -e -c "bash {0}"'
         run: |
           virt-install \
             --virt-type qemu \
