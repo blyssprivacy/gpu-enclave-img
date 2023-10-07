@@ -1,0 +1,34 @@
+name: Build ISO
+run-name: Building ISO
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install deps
+        run: sudo apt-get install -y cloud-image-utils virtinst \
+          qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils \
+          virt-manager
+      - name: Run cloud-localds
+        run: |
+          cloud-localds seed.iso kernel/iso/user-data kernel/iso/meta-data
+      - name: Generate empty disk
+        run: |
+          truncate -s 10G image.img
+      - name: Perform the install
+        working-directory: kernel/qemu
+        run: |
+          virt-install \
+            --connect qemu:///session \
+            -n test2 \
+            --os-variant ubuntu22.04 \
+            --memory 4096 \
+            --vcpus 2 \
+            --disk path=image.img,format=raw,cache=none \
+            --disk path=seed.iso,format=raw,cache=none \
+            --graphics none \
+            --location kernel/iso/ubuntu-22.04.2-live-server-amd64.iso,kernel=casper/vmlinuz,initrd=casper/initrd \
+            --noreboot \
+            --check all=off \
+            --extra-args 'console=ttyS0,115200n8 serial autoinstall'

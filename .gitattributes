@@ -85,3 +85,4 @@ kernel/qemu/usr/local/share/qemu/edk2-aarch64-code.fd filter=lfs diff=lfs merge=
 kernel/qemu/usr/local/share/qemu/npcm7xx_bootrom.bin filter=lfs diff=lfs merge=lfs -text
 kernel/qemu/usr/local/share/qemu/pxe-ne2k_pci.rom filter=lfs diff=lfs merge=lfs -text
 kernel/qemu/usr/local/share/qemu/vgabios-cirrus.bin filter=lfs diff=lfs merge=lfs -text
+kernel/iso/ubuntu-22.04.2-live-server-amd64.iso filter=lfs diff=lfs merge=lfs -text
