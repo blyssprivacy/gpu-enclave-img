@@ -2,7 +2,7 @@ name: Build ISO
 run-name: Building ISO
 on: [push]
 jobs:
-  Explore-GitHub-Actions:
+  BuildIso:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -17,7 +17,6 @@ jobs:
         run: |
           truncate -s 10G image.img
       - name: Perform the install
-        working-directory: kernel/qemu
         run: |
           virt-install \
             --connect qemu:///session \
