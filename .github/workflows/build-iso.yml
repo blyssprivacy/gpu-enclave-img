@@ -25,8 +25,9 @@ jobs:
       - name: Perform the install
         run: |
           virt-install \
+            --virt-type qemu \
             --connect qemu:///session \
-            -n test2 \
+            -n test3 \
             --os-variant ubuntu22.04 \
             --memory 4096 \
             --vcpus 2 \
