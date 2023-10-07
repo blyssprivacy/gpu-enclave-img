@@ -6,6 +6,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Update
+        run: sudo apt-get update
       - name: Install deps
         run: sudo apt-get install -y cloud-image-utils virtinst \
           qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils \
