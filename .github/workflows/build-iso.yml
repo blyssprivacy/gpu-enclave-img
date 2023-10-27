@@ -3,8 +3,8 @@ run-name: Building ISO
 on: [push]
 jobs:
   BuildIso:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: ubuntu-latest-m
+    timeout-minutes: 15
     steps:
       - name: Checkout github repo (+ download lfs dependencies)
         uses: actions/checkout@v2

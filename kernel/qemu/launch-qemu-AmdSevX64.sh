@@ -5,6 +5,7 @@
 #
 HDA="/home/amd/fedora-30.raw"
 HDB=""
+HDC=""
 MEM="2048"
 SMP="4"
 VNC=""
@@ -37,6 +38,7 @@ usage() {
 	echo " -bios              the bios to use (default $UEFI_PATH)"
 	echo " -hda PATH          hard disk file (default $HDA)"
 	echo " -hdb PATH          hard disk file (default $HDB)"
+	echo " -hdc PATH          hard disk file (default $HDC)"
 	echo " -gpu			          pass GPU to guest via VFIO"
 	echo " -readonly          make hda readonly"
 	echo " -mem MEM           guest memory size in MB (default $MEM)"
@@ -120,6 +122,9 @@ while [ -n "$1" ]; do
 				shift
 				;;
 		-hdb) 		HDB="$2"
+				shift
+				;;
+		-hdc) 		HDC="$2"
 				shift
 				;;
 		-mem)  		MEM="$2"
@@ -234,6 +239,7 @@ add_opts "-enable-kvm -cpu ${CPU_MODEL} -machine q35"
 
 # define guest memory
 add_opts "-m ${MEM}M,slots=5,maxmem=$((${MEM} + 8192))M"
+# add_opts "-m ${MEM}M"
 
 # don't reboot for SEV-ES guest
 add_opts "-no-reboot"
@@ -252,7 +258,7 @@ add_opts "-drive if=pflash,format=raw,unit=0,file=${UEFI_CODE},readonly"
 # usermode network if specifically requested.
 if [ "$USE_DEFAULT_NETWORK" = "1" ]; then
     #echo "guest port 22 is fwd to host 8000..."
-    add_opts "-netdev user,id=vmnic,hostfwd=tcp::8000-:22 -device e1000,netdev=vmnic,romfile="
+    add_opts "-netdev user,id=vmnic,hostfwd=tcp::8000-:22,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 -device e1000,netdev=vmnic,romfile="
     add_opts " -device virtio-net-pci,disable-legacy=on,iommu_platform=true"
     # add_opts "-netdev user,id=vmnic"
     # add_opts " -device virtio-net-pci,disable-legacy=on,iommu_platform=true,netdev=vmnic,romfile="
@@ -302,6 +308,25 @@ if [ -n "${HDB}" ]; then
 			add_opts "-drive file=${HDB},format=qcow2"
 		else
 			add_opts "-drive file=${HDB},format=raw"
+		fi
+	fi
+fi
+
+# If harddisk file is specified then add the HDD drive
+if [ -n "${HDC}" ]; then
+	if [ "$USE_VIRTIO" = "1" ]; then
+		if [[ ${HDC} = *"qcow2" ]]; then
+			add_opts "-drive file=${HDC},if=none,id=disk2,format=qcow2"
+		else
+			add_opts "-drive file=${HDC},if=none,id=disk2,format=raw"
+		fi
+		add_opts "-device virtio-scsi-pci,id=scsi2,disable-legacy=on,iommu_platform=true"
+		add_opts "-device scsi-hd,drive=disk2"
+	else
+		if [[ ${HDC} = *"qcow2" ]]; then
+			add_opts "-drive file=${HDC},if=virtio,format=qcow2"
+		else
+			add_opts "-drive file=${HDC},if=virtio,format=raw"
 		fi
 	fi
 fi
