@@ -1,0 +1,12 @@
+[Unit]
+Description=Runs a Docker image passed in the kernel command line
+Requires=docker.service
+After=docker.service
+After=blyss-nvidia-persistenced.service
+
+[Service]
+ExecStart=/home/guest/docker-runner.sh
+ExecStop=/usr/bin/docker stop main
+
+[Install]
+WantedBy=default.target

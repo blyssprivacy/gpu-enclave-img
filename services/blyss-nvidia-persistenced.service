@@ -1,0 +1,11 @@
+[Unit]
+Description=Blyss nvidia-persistenced
+Wants=syslog.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/nvidia-persistenced
+ExecStopPost=/bin/rm -rf /var/run/nvidia-persistenced
+
+[Install]
+WantedBy=multi-user.target

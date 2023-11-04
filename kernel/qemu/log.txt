@@ -1,0 +1,2 @@
+qemu-system-x86_64: warning: nic virtio-net-pci.0 has no peer
+qemu-system-x86_64: terminating on signal 15 from pid 306691 (<unknown process>)
