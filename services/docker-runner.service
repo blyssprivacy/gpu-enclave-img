@@ -6,7 +6,7 @@ After=blyss-nvidia-persistenced.service
 
 [Service]
 ExecStart=/home/guest/docker-runner.sh
-ExecStop=/usr/bin/docker stop main
+ExecStop=/usr/bin/docker stop shim app
 
 [Install]
 WantedBy=default.target

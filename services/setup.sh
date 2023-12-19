@@ -27,10 +27,21 @@ apt-get install -y nvidia-container-toolkit
 # 3. Set up NVIDIA runtime
 nvidia-ctk runtime configure --runtime=docker
 
-# 4. Restart Docker
+# 4. Set default Docker storage provider to fuse-overlayfs
+echo '{
+    "runtimes": {
+        "nvidia": {
+            "args": [],
+            "path": "nvidia-container-runtime"
+        }
+    },
+    "storage-driver": "fuse-overlayfs"
+}' > /etc/docker/daemon.json
+
+# 5. Restart Docker
 systemctl restart docker
 
-# 5. Enable docker-runner service
+# 6. Enable docker-runner service
 cp /home/guest/docker-runner.service /etc/systemd/system/docker-runner.service
 systemctl enable docker-runner.service
 
