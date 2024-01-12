@@ -3,8 +3,8 @@ run-name: Building ISO
 on: [push]
 jobs:
   BuildIso:
-    runs-on: ubuntu-latest-m
-    timeout-minutes: 15
+    runs-on: ubuntu-latest-16-core
+    timeout-minutes: 60
     steps:
       - name: Checkout github repo (+ download lfs dependencies)
         uses: actions/checkout@v2
@@ -16,26 +16,67 @@ jobs:
         run: sudo apt-get update
       - name: Install deps
         run: sudo apt-get install -y qemu-system-x86 libvirt-clients libvirt-daemon-system bridge-utils virtinst libvirt-daemon cloud-image-utils
-      - name: Run cloud-localds
+      - name: Set up disk
         run: |
-          cloud-localds seed.iso kernel/iso/user-data kernel/iso/meta-data
-      - name: Generate empty disk
+          qemu-img create -f qcow2 kernel/images/disk.qcow2 100G
+      - name: Mount ISO
         run: |
-          truncate -s 10G image.img
-      - name: Perform the install
-        shell: 'script -q -e -c "bash {0}"'
+          wget https://old-releases.ubuntu.com/releases/22.04/ubuntu-22.04.2-live-server-amd64.iso -O kernel/iso/ubuntu-22.04.2-live-server-amd64.iso -q
+          sudo mount -r kernel/iso/ubuntu-22.04.2-live-server-amd64.iso /mnt
+      - name: Run setup (10 min)
         run: |
-          virt-install \
-            --virt-type qemu \
-            --connect qemu:///session \
-            -n test3 \
-            --os-variant ubuntu22.04 \
-            --memory 4096 \
-            --vcpus 2 \
-            --disk path=image.img,format=raw,cache=none \
-            --disk path=seed.iso,format=raw,cache=none \
-            --graphics none \
-            --location kernel/iso/ubuntu-22.04.2-live-server-amd64.iso,kernel=casper/vmlinuz,initrd=casper/initrd \
-            --noreboot \
-            --check all=off \
-            --extra-args 'console=ttyS0,115200n8 serial autoinstall'
+          sudo python3 -m http.server 3003 --directory kernel/iso &
+          cd kernel/qemu && sudo ./launch-qemu-AmdSevX64.old.sh \
+            -oldfw \
+            -mem 8192 \
+            -hda ../images/disk.qcow2 \
+            -cdrom ../iso/ubuntu-22.04.2-live-server-amd64.iso \
+            -kernel /mnt/casper/vmlinuz \
+            -initrd /mnt/casper/initrd \
+            -append 'console=ttyS0 earlyprintk=serial autoinstall ds=nocloud-net;s=http://_gateway:3003/'
+      - name: Launch VM
+        run: |
+          sudo screen -d -m ./launch-qemu-AmdSevX64.old.sh \
+            -oldfw \
+            -mem 8192 \
+            -default-network \
+            -hda ../images/disk.qcow2
+          sleep 30
+          until ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'exit'; do sleep 5; done
+      - name: Run setup scripts
+        run: |
+          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo dpkg -i *.deb'
+          scp -i ../../services/dummy_ssh_key -P 8000 ../../services/modules.txt guest@localhost:/home/guest/
+          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo mv /home/guest/modules.txt /etc/initramfs-tools/modules'
+          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo update-initramfs -u'
+          scp -i ../../services/dummy_ssh_key -P 8000 guest@localhost:/boot/initrd.img-6.5.0-rc2-snp-guest-ad9c0bf475ec kernel/images/
+          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo shutdown now'
+      - name: Re-run VM with new kernel
+        run: |
+          sudo screen -d -m ./launch-qemu-AmdSevX64.old.sh \
+            -mem 8192 \
+            -default-network \
+            -hda ../images/disk.qcow2 \
+            -kernel ../images/vmlinuz-6.5.0-rc2-snp-guest-ad9c0bf475ec \
+            -initrd ../images/initrd.img-6.5.0-rc2-snp-guest-ad9c0bf475ec \
+            -append 'console=ttyS0 earlyprintk=serial'
+          sleep 30
+          until ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'exit'; do sleep 5; done
+      - name: Copy services and run setup scripts
+        run: |
+          scp -i ../../services/dummy_ssh_key -P 8000 ../../services/setup.sh ../../services/docker-runner.sh ../../services/docker-runner.service  ../../services/blyss-nvidia-persistenced.service ../../services/ncr-config.toml guest@localhost:/home/guest/
+          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo cp /home/guest/ncr-config.toml /etc/nvidia-container-runtime/config.toml'
+          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'chmod +x /home/guest/setup.sh && sudo /home/guest/setup.sh'
+          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo shutdown now'
+      - name: Shrink disk
+        run: |
+          qemu-img convert -O qcow2 ../images/disk.qcow2 ../images/disk-sparse.qcow2
+      - name: Upload shrunk disk as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: disk-sparse.qcow2
+          path: kernel/images/disk-sparse.qcow2
+
+
+
+      
