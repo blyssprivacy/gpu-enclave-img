@@ -47,6 +47,7 @@ jobs:
           until ssh -o StrictHostKeyChecking=no -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'exit'; do sleep 5; done
       - name: Run setup scripts
         run: |
+          scp -o StrictHostKeyChecking=no -i services/dummy_ssh_key -P 8000 ../images/debs/linux-headers-6.5.0-rc2-snp-guest-ad9c0bf475ec_6.5.0-rc2-gad9c0bf475ec-2_amd64.deb ../images/debs/linux-image-6.5.0-rc2-snp-guest-ad9c0bf475ec_6.5.0-rc2-gad9c0bf475ec-2_amd64.deb guest@localhost:/home/guest/
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo dpkg -i *.deb'
           scp -o StrictHostKeyChecking=no -i services/dummy_ssh_key -P 8000 services/modules.txt guest@localhost:/home/guest/
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo mv /home/guest/modules.txt /etc/initramfs-tools/modules'
