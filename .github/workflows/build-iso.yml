@@ -87,7 +87,11 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo shutdown now'
       - name: Shrink disk
         run: |
-          qemu-img convert -O qcow2 kernel/images/disk.qcow2 kernel/images/disk-sparse.qcow2
+          set +e
+          sleep 30
+          sudo killall qemu-system-x86_64
+          sleep 1
+          qemu-img convert --force-share -O qcow2 kernel/images/disk.qcow2 kernel/images/disk-sparse.qcow2
       - name: Upload shrunk disk as artifact
         uses: actions/upload-artifact@v2
         with:
