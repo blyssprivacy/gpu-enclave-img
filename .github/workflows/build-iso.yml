@@ -45,14 +45,21 @@ jobs:
           sudo chmod 600 ../../services/dummy_ssh_key
           sleep 30
           until ssh -o StrictHostKeyChecking=no -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'exit'; do sleep 5; done
-      - name: Run setup scripts
+      - name: Run .debs
         run: |
           scp -o StrictHostKeyChecking=no -i services/dummy_ssh_key -P 8000 kernel/images/debs/linux-headers-6.5.0-rc2-snp-guest-ad9c0bf475ec_6.5.0-rc2-gad9c0bf475ec-2_amd64.deb kernel/images/debs/linux-image-6.5.0-rc2-snp-guest-ad9c0bf475ec_6.5.0-rc2-gad9c0bf475ec-2_amd64.deb guest@localhost:/home/guest/
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo dpkg -i *.deb'
+      - name: Move modules and update initramfs
+        run: |
           scp -o StrictHostKeyChecking=no -i services/dummy_ssh_key -P 8000 services/modules.txt guest@localhost:/home/guest/
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo mv /home/guest/modules.txt /etc/initramfs-tools/modules'
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo update-initramfs -u'
+      - name: Copy initrd
+        run: |
           scp -o StrictHostKeyChecking=no -i services/dummy_ssh_key -P 8000 guest@localhost:/boot/initrd.img-6.5.0-rc2-snp-guest-ad9c0bf475ec kernel/images/
+      - name: Shutdown VM
+        continue-on-error: true
+        run: |
           set +e
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo shutdown now'
       - name: Re-run VM with new kernel
@@ -72,6 +79,9 @@ jobs:
           scp -o StrictHostKeyChecking=no -i services/dummy_ssh_key -P 8000 services/setup.sh services/docker-runner.sh services/docker-runner.service  services/blyss-nvidia-persistenced.service services/ncr-config.toml guest@localhost:/home/guest/
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo cp /home/guest/ncr-config.toml /etc/nvidia-container-runtime/config.toml'
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'chmod +x /home/guest/setup.sh && sudo /home/guest/setup.sh'
+      - name: Shutdown VM
+        continue-on-error: true
+        run: |
           set +e
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo shutdown now'
       - name: Shrink disk
