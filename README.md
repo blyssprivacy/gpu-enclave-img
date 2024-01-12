@@ -100,3 +100,8 @@ sudo ./launch-qemu-AmdSevX64.old.sh \
 # Run veritysetup to compute hash
 ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'time sudo veritysetup --debug --format=1 --data-block-size=4096 --hash-block-size=4096 --data-blocks=130796240 --hash-offset=0 --salt=0000000000000000000000000000000000000000000000000000000000000000 format /dev/sda2 /dev/sdb'
 ```
+
+## Building
+
+We are still working towards being able to build this disk image in CI.
+Until then, we publish the [~20 GB disk image](https://spiraldb.xyz/data/disk-sparse.qcow2) that we use.
