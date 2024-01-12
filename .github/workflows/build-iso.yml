@@ -1,5 +1,5 @@
-name: Build ISO
-run-name: Building ISO
+name: Build Disk Image
+run-name: Building Disk Image
 on: [push]
 jobs:
   BuildIso:
@@ -77,6 +77,7 @@ jobs:
       - name: Copy services and run setup scripts
         run: |
           scp -o StrictHostKeyChecking=no -i services/dummy_ssh_key -P 8000 services/setup.sh services/docker-runner.sh services/docker-runner.service  services/blyss-nvidia-persistenced.service services/ncr-config.toml guest@localhost:/home/guest/
+          ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo mkdir -p /etc/nvidia-container-runtime/'
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo cp /home/guest/ncr-config.toml /etc/nvidia-container-runtime/config.toml'
           ssh -o StrictHostKeyChecking=no -i services/dummy_ssh_key -p 8000 guest@localhost 'chmod +x /home/guest/setup.sh && sudo /home/guest/setup.sh'
       - name: Shutdown VM
