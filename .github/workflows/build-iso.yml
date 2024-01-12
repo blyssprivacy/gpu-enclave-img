@@ -36,24 +36,24 @@ jobs:
             -append 'console=ttyS0 earlyprintk=serial autoinstall ds=nocloud-net;s=http://_gateway:3003/'
       - name: Launch VM
         run: |
-          sudo screen -d -m ./launch-qemu-AmdSevX64.old.sh \
+          cd kernel/qemu && sudo screen -d -m ./launch-qemu-AmdSevX64.old.sh \
             -oldfw \
             -mem 8192 \
             -default-network \
             -hda ../images/disk.qcow2
           sleep 30
-          until ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'exit'; do sleep 5; done
+          until ssh -i services/dummy_ssh_key -p 8000 guest@localhost 'exit'; do sleep 5; done
       - name: Run setup scripts
         run: |
-          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo dpkg -i *.deb'
-          scp -i ../../services/dummy_ssh_key -P 8000 ../../services/modules.txt guest@localhost:/home/guest/
-          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo mv /home/guest/modules.txt /etc/initramfs-tools/modules'
-          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo update-initramfs -u'
-          scp -i ../../services/dummy_ssh_key -P 8000 guest@localhost:/boot/initrd.img-6.5.0-rc2-snp-guest-ad9c0bf475ec kernel/images/
-          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo shutdown now'
+          ssh -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo dpkg -i *.deb'
+          scp -i services/dummy_ssh_key -P 8000 services/modules.txt guest@localhost:/home/guest/
+          ssh -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo mv /home/guest/modules.txt /etc/initramfs-tools/modules'
+          ssh -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo update-initramfs -u'
+          scp -i services/dummy_ssh_key -P 8000 guest@localhost:/boot/initrd.img-6.5.0-rc2-snp-guest-ad9c0bf475ec kernel/images/
+          ssh -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo shutdown now'
       - name: Re-run VM with new kernel
         run: |
-          sudo screen -d -m ./launch-qemu-AmdSevX64.old.sh \
+          cd kernel/qemu && sudo screen -d -m ./launch-qemu-AmdSevX64.old.sh \
             -mem 8192 \
             -default-network \
             -hda ../images/disk.qcow2 \
@@ -61,16 +61,16 @@ jobs:
             -initrd ../images/initrd.img-6.5.0-rc2-snp-guest-ad9c0bf475ec \
             -append 'console=ttyS0 earlyprintk=serial'
           sleep 30
-          until ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'exit'; do sleep 5; done
+          until ssh -i services/dummy_ssh_key -p 8000 guest@localhost 'exit'; do sleep 5; done
       - name: Copy services and run setup scripts
         run: |
-          scp -i ../../services/dummy_ssh_key -P 8000 ../../services/setup.sh ../../services/docker-runner.sh ../../services/docker-runner.service  ../../services/blyss-nvidia-persistenced.service ../../services/ncr-config.toml guest@localhost:/home/guest/
-          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo cp /home/guest/ncr-config.toml /etc/nvidia-container-runtime/config.toml'
-          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'chmod +x /home/guest/setup.sh && sudo /home/guest/setup.sh'
-          ssh -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'sudo shutdown now'
+          scp -i services/dummy_ssh_key -P 8000 services/setup.sh services/docker-runner.sh services/docker-runner.service  services/blyss-nvidia-persistenced.service services/ncr-config.toml guest@localhost:/home/guest/
+          ssh -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo cp /home/guest/ncr-config.toml /etc/nvidia-container-runtime/config.toml'
+          ssh -i services/dummy_ssh_key -p 8000 guest@localhost 'chmod +x /home/guest/setup.sh && sudo /home/guest/setup.sh'
+          ssh -i services/dummy_ssh_key -p 8000 guest@localhost 'sudo shutdown now'
       - name: Shrink disk
         run: |
-          qemu-img convert -O qcow2 ../images/disk.qcow2 ../images/disk-sparse.qcow2
+          qemu-img convert -O qcow2 kernel/images/disk.qcow2 kernel/images/disk-sparse.qcow2
       - name: Upload shrunk disk as artifact
         uses: actions/upload-artifact@v2
         with:
