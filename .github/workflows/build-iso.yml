@@ -42,7 +42,7 @@ jobs:
             -mem 8192 \
             -default-network \
             -hda ../images/disk.qcow2
-          sudo chmod 600 ../services/dummy_ssh_key
+          sudo chmod 600 ../../services/dummy_ssh_key
           sleep 30
           until ssh -o StrictHostKeyChecking=no -i ../../services/dummy_ssh_key -p 8000 guest@localhost 'exit'; do sleep 5; done
       - name: Run setup scripts
