@@ -300,10 +300,11 @@ fi
 # usermode network if specifically requested.
 if [ "$USE_DEFAULT_NETWORK" = "1" ]; then
     #echo "guest port 22 is fwd to host 8000..."
-		add_opts "-netdev user,id=vmnic,hostfwd=tcp::8000-:22,hostfwd=tcp::8080-:8080,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 -device e1000,netdev=vmnic,romfile="
-    add_opts " -device virtio-net-pci,disable-legacy=on,iommu_platform=true"
+		# add_opts "-netdev user,id=vmnic,hostfwd=tcp::8000-:22,hostfwd=tcp::8080-:8080,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 -device e1000,netdev=vmnic,romfile="
+		add_opts "-netdev user,id=vmnic,hostfwd=tcp::8000-:22,hostfwd=tcp::8080-:8080,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443"
+    # add_opts " -device virtio-net-pci,disable-legacy=on,iommu_platform=true"
     # add_opts "-netdev user,id=vmnic"
-    # add_opts " -device virtio-net-pci,disable-legacy=on,iommu_platform=true,netdev=vmnic,romfile="
+    add_opts " -device virtio-net-pci,disable-legacy=on,iommu_platform=true,netdev=vmnic,romfile="
 fi
 
 if [ "$GPU" = "1" ]; then

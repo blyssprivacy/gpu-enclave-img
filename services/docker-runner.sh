@@ -37,6 +37,12 @@ if ! has_cmd_word blyss_docker_img; then
   exit 1
 fi
 
+# check if we are running on an overlay
+if has_cmd_word overlayroot; then
+  echo "Running on overlay, expanding overlay"
+  mount -o remount,size=85% /media/root-rw
+  df -h
+fi
 
 # SHIM_DOCKER_IMG=$(cat /proc/cmdline | grep -o '\bblyss_shim_docker_img=[^ ]*' | sed -nr 's/blyss_shim_docker_img=(.+)/\1/p')
 
